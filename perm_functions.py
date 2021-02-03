@@ -52,6 +52,7 @@ print(r'Liquid permeability is {:.2f} ± {:.2f} mD'.format(res[0]*1000 / 1e-12, 
 
 """
 
+#%%
 def metarock_import(filename, apply_offsets=True):
     
     header1 = pd.read_csv(filename, skiprows=29, sep=',', nrows=1, usecols = range(56), 
@@ -102,8 +103,12 @@ def stable_dP(dP, Q, u_rates, rounding=1, lim_len=10, sds=1):
     stable_pressures  = [np.mean(sd_trim(region,sds)) for region in stable_pressures]
     return stable_pressures
     
-def calc_perm(Q, L, dP, mu, A):
+def calc_perm(Q, L, dP, mu, A, theta=0, rho = 1000):
     # supply vars in SI
+    g = 9.8 # m/s2
+    # [rho] = kg/m3
+    # take negative theta if flow bottom up
+    dP = dP + rho*g*np.sin(theta)
     perm = L * mu * Q/ (A * dP)
     return perm
         

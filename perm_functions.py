@@ -74,6 +74,7 @@ def metarock_import(filename, apply_offsets=True):
     else:
         return data, offsets
 
+    
 def merge_pumps(data):
     data['Injc. 1 Enc. Ra CC/Min'] = data['Injc. 1 Enc. Ra CC/Min'].apply(lambda x: x if x >=0 else 0)
     data['Injc. 2 Enc. Ra CC/Min'] = data['Injc. 2 Enc. Ra CC/Min'].apply(lambda x: x if x >=0 else 0)
@@ -83,11 +84,13 @@ def merge_pumps(data):
     data['Injc. Rate 2'] = data['Injc. 3 Enc. Ra CC/Min'] + data['Injc. 4 Enc. Ra CC/Min']
     return data
 
+
 def uniq_flows(column, rounding=1, lim_len=10):
     uflows = np.unique(np.round(column, rounding))
     uflows = uflows[uflows > 0]
     uflows = [q for q in uflows if len(column[np.round(column,rounding) == q]) > lim_len]
     return np.array(uflows)
+
 
 def sd_trim(data, sds):
     avg = np.mean(data)
@@ -97,18 +100,27 @@ def sd_trim(data, sds):
     data = data[trim_idx]
     return data
 
+
 def stable_dP(dP, Q, u_rates, rounding=1, lim_len=10, sds=1):
     
     stable_pressures = list([np.array(dP[np.round(Q,rounding) == q]) for q in u_rates if len(dP[np.round(Q,rounding)==q]) > lim_len]) 
     stable_pressures  = [np.mean(sd_trim(region,sds)) for region in stable_pressures]
     return stable_pressures
-    
-def calc_perm(Q, L, dP, mu, A, theta=0, rho = 1000):
+
+
+def calc_perm(Q, L, dP, mu, A, theta=0, rho=1000):
     # supply vars in SI
     g = 9.8 # m/s2
     # [rho] = kg/m3
     # take negative theta if flow bottom up
     dP = dP + rho*g*np.sin(theta)
     perm = L * mu * Q/ (A * dP)
-    return perm
         
+    """
+    since measure dP (not impose, we impose flow instead), 
+    so gravity effect is there already, no need to account for it
+    bit for general case, I left the gravity effect here.
+    alternatively, one can introduce gravity here to check its effect 
+    on permeability in such a setup
+    """
+    return perm
